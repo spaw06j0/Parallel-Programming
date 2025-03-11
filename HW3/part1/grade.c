@@ -40,8 +40,10 @@ void print_scores(double stu_time, double ref_time, logical verified)
 }
 
 int main(int argc, char *argv[])
-{
-    int num_threads = omp_get_max_threads();
+{   
+    // omp_set_dynamic(0); 
+    // int num_threads = omp_get_max_threads();
+    int num_threads = 16;
     int i, j, k, it;
     double zeta;
     double t, t_total = 0, reference_total = 0, default_total = 0;

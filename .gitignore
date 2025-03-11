@@ -1,1 +1,3 @@
 *.out
+objs/
+*.ppm
