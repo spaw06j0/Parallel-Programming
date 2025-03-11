@@ -26,7 +26,7 @@ extern void mandelbrotSerial(
 // workerThreadStart --
 //
 // Thread entrypoint.
-void workerThreadStart(WorkerArgs *const args)
+void workerThreadStartV1(WorkerArgs *const args)
 {
 
     // TODO FOR PP STUDENTS: Implement the body of the worker
@@ -36,8 +36,21 @@ void workerThreadStart(WorkerArgs *const args)
     // half of the image and thread 1 could compute the bottom half.
     // Of course, you can copy mandelbrotSerial() to this file and 
     // modify it to pursue a better performance.
+    float dx = (args->x1 - args->x0) / args->width;
+    float dy = (args->y1 - args->y0) / args->height;
+    int rowsPerThread = args->height / args->numThreads;
+    int startRow = args->threadId * rowsPerThread;
+    int endRow = (args->threadId == args->numThreads - 1) ? args->height : (startRow + rowsPerThread);
+    mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, startRow, endRow - startRow, args->maxIterations, args->output);
+}
 
-    printf("Hello world from thread %d\n", args->threadId);
+void workerThreadStartV2(WorkerArgs *const args)
+{
+    float dx = (args->x1 - args->x0) / args->width;
+    float dy = (args->y1 - args->y0) / args->height;
+    for (int i = args->threadId; i < args->height; i+= args->numThreads) {
+        mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, i, 1, args->maxIterations, args->output);
+    }
 }
 
 //
@@ -86,10 +99,12 @@ void mandelbrotThread(
     // as well.
     for (int i = 1; i < numThreads; i++)
     {
-        workers[i] = std::thread(workerThreadStart, &args[i]);
+        // double startTime = CycleTimer::currentSeconds();
+        workers[i] = std::thread(workerThreadStartV2, &args[i]);
+        // double endTime = CycleTimer::currentSeconds();
+        // printf("Thread %d took %.3f ms\n", i, (endTime - startTime) * 1000);
     }
-
-    workerThreadStart(&args[0]);
+    workerThreadStartV2(&args[0]);
 
     // join worker threads
     for (int i = 1; i < numThreads; i++)
